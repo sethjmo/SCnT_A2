@@ -1,0 +1,48 @@
+---
+name: Lint and Bandit
+
+on: # yamllint disable-line rule:truthy
+  push: null
+  pull_request: null
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  build:
+    name: Lint
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: read
+      # To report GitHub Actions status checks
+      statuses: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          # super-linter needs the full git history to get the
+          # list of files that changed across commits
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Super-linter
+        uses: super-linter/super-linter@v8.2.1 # x-release-please-version
+        env:
+          # To report GitHub Actions status checks
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  analyze:
+      name: Bandit
+      runs-on: ubuntu-latest
+      permissions:
+        # required for all workflows
+        security-events: write
+        # only required for workflows in private repositories
+        actions: read
+        contents: read
+      steps:
+        - name: Perform Bandit Analysis
+          uses: PyCQA/bandit-action@v1
